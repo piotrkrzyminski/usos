@@ -7,6 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.usos.facade.facades.user.UserFacade;
 
@@ -25,6 +26,8 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
 
     private UserFacade userFacade;
 
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public Authentication authenticate(
             Authentication authentication) throws AuthenticationException {
@@ -42,6 +45,8 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
         return authentication.equals(UsernamePasswordAuthenticationToken.class);
     }
 
+
+
     public UserFacade getUserFacade() {
         return userFacade;
     }
@@ -49,5 +54,14 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
     @Resource
     public void setUserFacade(UserFacade userFacade) {
         this.userFacade = userFacade;
+    }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
+    @Resource
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 }
