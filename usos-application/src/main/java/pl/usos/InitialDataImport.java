@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.usos.repository.user.UserModel;
 import pl.usos.repository.user.UserRepository;
@@ -22,13 +23,15 @@ public class InitialDataImport implements ApplicationListener<ContextRefreshedEv
 
     private UserRepository userRepository;
 
+    private PasswordEncoder passwordEncoder;
+
     @Override
     public void onApplicationEvent(ContextRefreshedEvent contextRefreshedEvent) {
         LOG.debug("Creating initial data");
 
         UserModel user = new UserModel();
         user.setEmail("timmy@test.com");
-        user.setPassword("qwerty");
+        user.setPassword(getPasswordEncoder().encode("qwerty"));
 
         getUserRepository().save(user);
     }
@@ -40,5 +43,14 @@ public class InitialDataImport implements ApplicationListener<ContextRefreshedEv
     @Resource
     public void setUserRepository(UserRepository userRepository) {
         this.userRepository = userRepository;
+    }
+
+    public PasswordEncoder getPasswordEncoder() {
+        return passwordEncoder;
+    }
+
+    @Resource
+    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
     }
 }
