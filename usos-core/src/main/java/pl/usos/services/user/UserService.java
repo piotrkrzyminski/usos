@@ -3,6 +3,7 @@ package pl.usos.services.user;
 import org.springframework.security.core.AuthenticationException;
 import pl.usos.repository.user.RoleModel;
 import pl.usos.repository.user.UserModel;
+import pl.usos.services.exceptions.DuplicatedUserException;
 import pl.usos.services.exceptions.UserNotExistsException;
 
 import java.util.List;
@@ -33,4 +34,12 @@ public interface UserService {
      * @return list of roles.
      */
     List<RoleModel> getRolesForUser(UserModel userModel);
+
+    /**
+     * Save user to datasource. If email of new user already exists in datasource then throw exception.
+     *
+     * @param userModel user to save.
+     * @throws DuplicatedUserException thrown when trying to save user which email already exists.
+     */
+    void saveUser(final UserModel userModel) throws DuplicatedUserException;
 }

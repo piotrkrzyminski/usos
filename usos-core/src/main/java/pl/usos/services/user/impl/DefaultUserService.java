@@ -10,6 +10,7 @@ import pl.usos.repository.user.RoleModel;
 import pl.usos.repository.user.RoleRepository;
 import pl.usos.repository.user.UserModel;
 import pl.usos.repository.user.UserRepository;
+import pl.usos.services.exceptions.DuplicatedUserException;
 import pl.usos.services.exceptions.UserNotExistsException;
 import pl.usos.services.user.UserService;
 
@@ -59,13 +60,14 @@ public class DefaultUserService implements UserService {
         notNull(userModel, "Passed data are wrong!");
 
         LOG.debug("Performing user authentication");
-        UserModel result = userRepository.findUserByEmail(userModel.getEmail());
+        UserModel result = getUserRepository().findUserByEmail(userModel.getEmail());
         if (result != null) {
             if (userModel.getEmail().equals(result.getEmail()) && getPasswordEncoder().matches(userModel.getPassword(), result.getPassword())) {
                 return result;
             }
         }
 
+        LOG.debug("Email or password are incorrect");
         throw new BadCredentialsException("Email or password are incorrect");
     }
 
@@ -75,7 +77,23 @@ public class DefaultUserService implements UserService {
         notNull(userModel, "User cannot be null!");
         notBlank(userModel.getEmail(), "Email cannot be empty!");
 
-        return roleRepository.findRolesByUserEmail(userModel.getEmail());
+        return getRoleRepository().findRolesByUserEmail(userModel.getEmail());
+    }
+
+    @Override
+    public void saveUser(UserModel userModel) throws DuplicatedUserException {
+
+        notNull(userModel, "User cannot be null!");
+        notBlank(userModel.getEmail(), "Email cannot be blank!");
+
+        UserModel user = getUserRepository().findUserByEmail(userModel.getEmail());
+        if (user != null) {
+            LOG.error(format("User with the following email [%s] already exists!", userModel.getEmail()));
+            throw new DuplicatedUserException(format("User with the following email [%s] already exists!", userModel.getEmail()));
+        }
+
+        LOG.debug(format("Saving user with email [%s] to database", userModel.getEmail()));
+        getUserRepository().save(userModel);
     }
 
     public UserRepository getUserRepository() {

@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -13,6 +14,7 @@ import pl.usos.repository.user.RoleModel;
 import pl.usos.repository.user.RoleRepository;
 import pl.usos.repository.user.UserModel;
 import pl.usos.repository.user.UserRepository;
+import pl.usos.services.exceptions.DuplicatedUserException;
 import pl.usos.services.exceptions.UserNotExistsException;
 
 import java.util.Collections;
@@ -180,6 +182,53 @@ public class DefaultUserServiceTest {
 
         assertNotNull(roles);
         assertTrue(roles.isEmpty());
+    }
+
+    /**
+     * Try to save new user to database when email is not duplicated.
+     * New user should be added.
+     */
+    @Test
+    public void testSaveUserSuccess() throws DuplicatedUserException {
+
+        when(user.getEmail()).thenReturn(EMAIL);
+        when(user.getPassword()).thenReturn(PASSWORD);
+        when(userRepository.findUserByEmail(Mockito.anyString())).thenReturn(null); // user not found
+
+        userService.saveUser(user);
+    }
+
+    /**
+     * Try to save new user to database when email is duplicated.
+     * This should throw exception {@link DuplicatedUserException}.
+     */
+    @Test(expected = DuplicatedUserException.class)
+    public void testSaveUserDuplicated() throws DuplicatedUserException {
+
+        when(user.getEmail()).thenReturn(EMAIL);
+        when(user.getPassword()).thenReturn(PASSWORD);
+        when(userRepository.findUserByEmail(Mockito.anyString())).thenReturn(user); // user not found
+
+        userService.saveUser(user);
+    }
+
+    /**
+     * Perform saving user when parameter object is null.
+     * This should throw exception {@link NullPointerException}.
+     */
+    @Test(expected = NullPointerException.class)
+    public void testSaveUserWhenNull() throws DuplicatedUserException {
+        userService.saveUser(null);
+    }
+
+    /**
+     * Perform saving user when parameter email of user is empty.
+     * This should throw exception {@link IllegalArgumentException}.
+     */
+    @Test(expected = IllegalArgumentException.class)
+    public void testSaveUserWhenEmailEmpty() throws DuplicatedUserException {
+        when(user.getEmail()).thenReturn("  ");
+        userService.saveUser(user);
     }
 
 }
