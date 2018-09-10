@@ -1,8 +1,11 @@
 package pl.usos.services.user;
 
 import org.springframework.security.core.AuthenticationException;
+import pl.usos.repository.user.RoleModel;
 import pl.usos.repository.user.UserModel;
 import pl.usos.services.exceptions.UserNotExistsException;
+
+import java.util.List;
 
 public interface UserService {
 
@@ -22,4 +25,12 @@ public interface UserService {
      * @return user model if user will be authenticated.
      */
     UserModel authenticate(UserModel userModel) throws AuthenticationException;
+
+    /**
+     * Get roles form user by it's unique email address.
+     *
+     * @param userModel user which roles will be found.
+     * @return list of roles.
+     */
+    List<RoleModel> getRolesForUser(UserModel userModel);
 }

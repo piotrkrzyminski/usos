@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="pl"  xmlns:th="http://www.thymeleaf.org">
+<html lang="pl" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="utf-8"/>
 </head>
 <body>
 <h1>Home</h1>
+<span sec:authorize="hasRole('ROLE_USER')">Role user</span>
+<span sec:authorize="hasRole('ROLE_ADMIN')">Role admin</span>
 <form th:action="@{/logout}" th:method="post">
     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
     <input th:type="submit" value="Zakończ sesję"/>

@@ -9,12 +9,16 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
+import pl.usos.repository.user.RoleModel;
+import pl.usos.repository.user.RoleRepository;
 import pl.usos.repository.user.UserModel;
 import pl.usos.repository.user.UserRepository;
 import pl.usos.services.exceptions.UserNotExistsException;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import java.util.Collections;
+import java.util.List;
+
+import static org.junit.Assert.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -30,10 +34,15 @@ public class DefaultUserServiceTest {
     private static final String PASSWORD = "qwerty";
     private static final String EMPTY_EMAIL = "  ";
 
+    private static final String ADMIN_ROLE = "ROLE_ADMIN";
+
     private DefaultUserService userService;
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private RoleRepository roleRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -44,15 +53,21 @@ public class DefaultUserServiceTest {
     @Mock
     private UserModel badUser;
 
+    @Mock
+    private RoleModel adminRole;
+
     @Before
     public void setup() {
         userService = new DefaultUserService();
         user = mock(UserModel.class);
         badUser = mock(UserModel.class);
+        adminRole = mock(RoleModel.class);
         userRepository = mock(UserRepository.class);
+        roleRepository = mock(RoleRepository.class);
         passwordEncoder = mock(BCryptPasswordEncoder.class);
 
         userService.setUserRepository(userRepository);
+        userService.setRoleRepository(roleRepository);
         userService.setPasswordEncoder(passwordEncoder);
     }
 
@@ -122,6 +137,49 @@ public class DefaultUserServiceTest {
         when(badUser.getPassword()).thenReturn("badPassword");
 
         userService.authenticate(badUser);
+    }
+
+    /**
+     * Get roles from user by email address.
+     * This should return list of roles attached to user.
+     */
+    @Test
+    public void testGetRolesForUserSuccess() {
+
+        when(user.getEmail()).thenReturn(EMAIL);
+        when(user.getPassword()).thenReturn(PASSWORD);
+        when(adminRole.getName()).thenReturn(ADMIN_ROLE);
+        when(adminRole.getUsers()).thenReturn(Collections.singletonList(user));
+        when(user.getRoles()).thenReturn(Collections.singletonList(adminRole));
+
+        when(roleRepository.findRolesByUserEmail(EMAIL)).thenReturn(Collections.singletonList(adminRole));
+
+        List<RoleModel> roles = userService.getRolesForUser(user);
+
+        assertNotNull(roles);
+        assertEquals(1, roles.size());
+        assertEquals(ADMIN_ROLE, roles.get(0).getName());
+    }
+
+    /**
+     * Get roles from user when result will be empty.
+     * Should return empty list of roles.
+     */
+    @Test
+    public void testGetRolesForUserNotFound() {
+
+        when(user.getEmail()).thenReturn(EMAIL);
+        when(user.getPassword()).thenReturn(PASSWORD);
+        when(adminRole.getName()).thenReturn(ADMIN_ROLE);
+        when(adminRole.getUsers()).thenReturn(Collections.singletonList(user));
+        when(user.getRoles()).thenReturn(Collections.singletonList(adminRole));
+
+        when(roleRepository.findRolesByUserEmail(EMAIL)).thenReturn(Collections.emptyList());
+
+        List<RoleModel> roles = userService.getRolesForUser(user);
+
+        assertNotNull(roles);
+        assertTrue(roles.isEmpty());
     }
 
 }
