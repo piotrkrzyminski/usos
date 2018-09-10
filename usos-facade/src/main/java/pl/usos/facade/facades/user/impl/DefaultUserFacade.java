@@ -6,9 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
-import pl.usos.facade.converter.user.RoleConverter;
+import pl.usos.facade.converter.user.GrantedAuthorityConverter;
+import pl.usos.facade.data.user.RegisterData;
+import pl.usos.facade.exceptions.DuplicateEmailException;
 import pl.usos.facade.facades.user.UserFacade;
 import pl.usos.repository.user.UserModel;
+import pl.usos.services.exceptions.DuplicatedUserException;
 import pl.usos.services.exceptions.UserNotExistsException;
 import pl.usos.services.user.UserService;
 
@@ -18,6 +21,7 @@ import java.util.List;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.Validate.notBlank;
+import static org.apache.commons.lang3.Validate.notNull;
 
 /**
  * Default implementation of {@link UserFacade}
@@ -31,7 +35,7 @@ public class DefaultUserFacade implements UserFacade {
 
     private UserService userService;
 
-    private RoleConverter roleConverter;
+    private GrantedAuthorityConverter grantedAuthorityConverter;
 
     @Override
     public void login(final String email, final String password) {
@@ -52,12 +56,29 @@ public class DefaultUserFacade implements UserFacade {
         List<GrantedAuthority> authorities = new ArrayList<>();
         try {
             UserModel user = userService.getUserForEmail(email);
-            authorities = roleConverter.convertAll(userService.getRolesForUser(user));
-        } catch (UserNotExistsException e) {
-            e.printStackTrace();
+            authorities = getGrantedAuthorityConverter().convertAll(userService.getRolesForUser(user));
+        } catch (UserNotExistsException ignored) {
         }
 
         return authorities;
+    }
+
+    @Override
+    public void register(RegisterData registerData) throws DuplicateEmailException, IllegalArgumentException {
+
+        notNull(registerData, "Register data cannot be null!");
+        notBlank(registerData.getEmail(), "Email cannot be empty!");
+        notBlank(registerData.getPassword(), "Password cannot be empty!");
+
+        UserModel newUser = new UserModel();
+        newUser.setEmail(registerData.getEmail());
+        newUser.setPassword(registerData.getPassword());
+
+        try {
+            userService.saveUser(newUser);
+        } catch (DuplicatedUserException e) {
+            throw new DuplicateEmailException(format("User with email [%s] already exists", registerData.getEmail()));
+        }
     }
 
     private UserModel createUserInstance(final String email, final String password) {
@@ -77,12 +98,12 @@ public class DefaultUserFacade implements UserFacade {
         this.userService = userService;
     }
 
-    public RoleConverter getRoleConverter() {
-        return roleConverter;
+    public GrantedAuthorityConverter getGrantedAuthorityConverter() {
+        return grantedAuthorityConverter;
     }
 
     @Resource
-    public void setRoleConverter(RoleConverter roleConverter) {
-        this.roleConverter = roleConverter;
+    public void setGrantedAuthorityConverter(GrantedAuthorityConverter grantedAuthorityConverter) {
+        this.grantedAuthorityConverter = grantedAuthorityConverter;
     }
 }

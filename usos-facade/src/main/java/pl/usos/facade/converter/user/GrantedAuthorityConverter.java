@@ -12,7 +12,7 @@ import pl.usos.repository.user.RoleModel;
  * @author Piotr Krzyminski
  */
 @Component
-public class RoleConverter implements Converter<RoleModel, GrantedAuthority> {
+public class GrantedAuthorityConverter implements Converter<RoleModel, GrantedAuthority> {
 
     @Override
     public GrantedAuthority convert(RoleModel roleModel) {
