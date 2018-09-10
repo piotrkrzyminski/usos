@@ -6,6 +6,8 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.junit4.SpringRunner;
 import pl.usos.repository.user.UserModel;
 import pl.usos.repository.user.UserRepository;
@@ -34,6 +36,9 @@ public class DefaultUserServiceTest {
     private UserRepository userRepository;
 
     @Mock
+    private PasswordEncoder passwordEncoder;
+
+    @Mock
     private UserModel user;
 
     @Mock
@@ -45,8 +50,10 @@ public class DefaultUserServiceTest {
         user = mock(UserModel.class);
         badUser = mock(UserModel.class);
         userRepository = mock(UserRepository.class);
+        passwordEncoder = mock(BCryptPasswordEncoder.class);
 
         userService.setUserRepository(userRepository);
+        userService.setPasswordEncoder(passwordEncoder);
     }
 
     /**
@@ -92,6 +99,7 @@ public class DefaultUserServiceTest {
         when(user.getEmail()).thenReturn(EMAIL);
         when(user.getPassword()).thenReturn(PASSWORD);
         when(userRepository.findUserByEmail(EMAIL)).thenReturn(user);
+        when(passwordEncoder.matches(PASSWORD, PASSWORD)).thenReturn(true);
 
         UserModel result = userService.authenticate(user);
 

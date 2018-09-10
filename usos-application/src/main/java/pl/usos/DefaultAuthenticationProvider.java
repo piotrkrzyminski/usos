@@ -1,13 +1,9 @@
 package pl.usos;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import pl.usos.facade.facades.user.UserFacade;
 
@@ -15,18 +11,14 @@ import javax.annotation.Resource;
 import java.util.Collections;
 
 /**
- * Default authetication provider for login.
+ * Default authentication provider for login.
  *
  * @author Piotr Krzyminski
  */
 @Component
 public class DefaultAuthenticationProvider implements AuthenticationProvider {
 
-    private static final Logger LOG = LoggerFactory.getLogger(DefaultAuthenticationProvider.class);
-
     private UserFacade userFacade;
-
-    private PasswordEncoder passwordEncoder;
 
     @Override
     public Authentication authenticate(
@@ -46,7 +38,6 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
     }
 
 
-
     public UserFacade getUserFacade() {
         return userFacade;
     }
@@ -54,14 +45,5 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
     @Resource
     public void setUserFacade(UserFacade userFacade) {
         this.userFacade = userFacade;
-    }
-
-    public PasswordEncoder getPasswordEncoder() {
-        return passwordEncoder;
-    }
-
-    @Resource
-    public void setPasswordEncoder(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
     }
 }
