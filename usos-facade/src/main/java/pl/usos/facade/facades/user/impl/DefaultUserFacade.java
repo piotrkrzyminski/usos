@@ -4,12 +4,17 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
+import pl.usos.facade.converter.user.RoleConverter;
 import pl.usos.facade.facades.user.UserFacade;
 import pl.usos.repository.user.UserModel;
+import pl.usos.services.exceptions.UserNotExistsException;
 import pl.usos.services.user.UserService;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 import static org.apache.commons.lang3.Validate.notBlank;
@@ -26,15 +31,33 @@ public class DefaultUserFacade implements UserFacade {
 
     private UserService userService;
 
+    private RoleConverter roleConverter;
+
     @Override
     public void login(final String email, final String password) {
 
-        if(StringUtils.isBlank(email) || StringUtils.isBlank(password))
+        if (StringUtils.isBlank(email) || StringUtils.isBlank(password))
             throw new BadCredentialsException("Bad credentials");
 
         LOG.debug(format("Performing user authentication with email [%s]", email));
 
         getUserService().authenticate(createUserInstance(email, password));
+    }
+
+    @Override
+    public List<GrantedAuthority> getAuthoritiesFromUser(final String email) {
+
+        notBlank(email, "Email cannot be empty!");
+
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        try {
+            UserModel user = userService.getUserForEmail(email);
+            authorities = roleConverter.convertAll(userService.getRolesForUser(user));
+        } catch (UserNotExistsException e) {
+            e.printStackTrace();
+        }
+
+        return authorities;
     }
 
     private UserModel createUserInstance(final String email, final String password) {
@@ -52,5 +75,14 @@ public class DefaultUserFacade implements UserFacade {
     @Resource
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    public RoleConverter getRoleConverter() {
+        return roleConverter;
+    }
+
+    @Resource
+    public void setRoleConverter(RoleConverter roleConverter) {
+        this.roleConverter = roleConverter;
     }
 }

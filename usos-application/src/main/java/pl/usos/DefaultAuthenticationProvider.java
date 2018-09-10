@@ -4,11 +4,12 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 import pl.usos.facade.facades.user.UserFacade;
 
 import javax.annotation.Resource;
-import java.util.Collections;
+import java.util.List;
 
 /**
  * Default authentication provider for login.
@@ -26,10 +27,9 @@ public class DefaultAuthenticationProvider implements AuthenticationProvider {
 
         final String email = authentication.getName();
         final String password = authentication.getCredentials().toString();
+        final List<GrantedAuthority> authorities = userFacade.getAuthoritiesFromUser(email);
 
-        getUserFacade().login(email, password);
-
-        return new UsernamePasswordAuthenticationToken(email, password, Collections.emptyList());
+        return new UsernamePasswordAuthenticationToken(email, password, authorities);
     }
 
     @Override
